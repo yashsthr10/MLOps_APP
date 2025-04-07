@@ -1,0 +1,37 @@
+name: Deploy to GKE
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ secrets.GCP_PROJECT }}
+        service_account_key: ${{ secrets.GKE_CREDENTIALS }}
+        export_default_credentials: true
+
+    - name: Authenticate with GKE
+      run: |
+        gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }} --region ${{ secrets.REGION }} --project ${{ secrets.GCP_PROJECT }}
+
+    - name: Configure Docker to use Google Artifact Registry
+      run: gcloud auth configure-docker us-central1-docker.pkg.dev
+
+    - name: Build and Push Docker Image
+      run: |
+        docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/ml-repo/streamlit-ml-app:v1.0.0 .
+        docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/ml-repo/streamlit-ml-app:v1.0.0
+
+    - name: Deploy to GKE using kubectl
+      run: |
+        kubectl apply -f k8s/deployment.yaml
+        kubectl apply -f k8s/service.yaml
