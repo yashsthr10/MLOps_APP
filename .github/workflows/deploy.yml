@@ -21,13 +21,13 @@ jobs:
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          project_id: ${{ secrets.GCP_PROJECT }}
 
       - name: Configure kubectl
         run: |
-          gcloud container clusters get-credentials YOUR_CLUSTER_NAME \
-            --region YOUR_CLUSTER_REGION \
-            --project ${{ secrets.GCP_PROJECT_ID }}
+          gcloud container clusters get-credentials streamlitmlapp \
+            --region us-central1 \
+            --project ${{ secrets.GCP_PROJECT }}
 
       - name: Deploy to GKE
         run: |
